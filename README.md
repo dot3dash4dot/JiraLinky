@@ -20,11 +20,9 @@ This Chrome extension allows users to copy the current page's title to the clipb
 - Click on the extension icon in the Chrome toolbar.
 - The title of the current page will be copied to your clipboard.
 
-## Files
+## Tests
 
-- `src/background.js`: Background script that listens for icon clicks and sends messages to the content script.
-- `src/content.js`: Content script that handles copying the page title to the clipboard.
-- `src/manifest.json`: Configuration file for the Chrome extension.
+To run tests, use `npm test`
 
 ## License
 
