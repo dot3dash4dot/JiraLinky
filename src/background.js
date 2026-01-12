@@ -5,40 +5,60 @@ chrome.action.onClicked.addListener((tab) => {
             func: () => {
                 // This code runs in the context of the page
 
-                function getLinks(url) {
-                    const baseURLMatch = url.match(/(http.*?\/\/.*?)\//);
-                    const baseURL = baseURLMatch ? baseURLMatch[1] : null;
-                    if (!baseURL) {
-                        return null;
+                function getLinks(pageURL) {
+                    let linkURL, linkTitle;
+
+                    if (pageURL.includes("jira")) {
+                        const baseURLMatch = pageURL.match(/(http.*?\/\/.*?)\//);
+                        const baseURL = baseURLMatch ? baseURLMatch[1] : null;
+                        if (!baseURL) {
+                            return null;
+                        }
+
+                        //Look for elements on a standard Jira issue page
+                        let issueNumberElement = document.querySelector('#key-val');
+                        let issueSummaryElement = document.querySelector('#summary-val');
+
+                        if (!issueNumberElement) {
+                            //Look for elements for issues opened in a board's side panel
+                            issueNumberElement = document.querySelector('#issuekey-val > h3 > a');
+                        }
+                        
+                        if (issueNumberElement && issueSummaryElement) {
+                            const issuePartURL = issueNumberElement.getAttribute('href');
+                            const issueNumber = issueNumberElement.textContent.trim();
+                            const issueSummary = issueSummaryElement.textContent.trim();
+
+                            if (issuePartURL && issueNumber && issueSummary) {
+                                linkURL = `${baseURL}${issuePartURL}`;
+                                linkTitle = `${issueNumber}: ${issueSummary}`;
+                            }
+                        }
+                    }
+                    else if (pageURL.includes("servicenow")) {
+                        linkURL = pageURL;
+
+                        const elementSelectors = [
+                            '#sys_readonly\.cmdb_ci_business_app\.u_hpsm_name', //BA
+                            '#sys_readonly\.cmdb_ci_appl\.name', //Component
+                            '#sys_readonly\.change_request\.number', //Change Request
+                            '#sys_readonly\.u_unified_exceptions\.number', //Exception
+                            '#sys_readonly\.incident\.number' //Incident
+                        ];
+
+                        //Find first matching element
+                        const objectTitleElement = elementSelectors.find(selector => document.querySelector(selector));
+                        if (objectTitleElement) {
+                            linkTitle = objectTitleElement.getAttribute('value');
+                        }
                     }
 
-                    let issueNumberElement, issueSummaryElement;
-                    let issuePartURL, issueNumber, issueSummary;
-
-                    //Look for elements on a standard Jira issue page
-                    issueNumberElement = document.querySelector('#key-val');
-                    issueSummaryElement = document.querySelector('#summary-val');
-
-                    if (!issueNumberElement) {
-                        //Look for elements for issues opened in a board's side panel
-                        issueNumberElement = document.querySelector('#issuekey-val > h3 > a');
-                    }
-                    
-                    if (issueNumberElement && issueSummaryElement) {
-                        issuePartURL = issueNumberElement.getAttribute('href');
-                        issueNumber = issueNumberElement.textContent.trim();
-                        issueSummary = issueSummaryElement.textContent.trim();
-                    }
-
-                    if (issueNumber && issueSummary) {
-                        const issueURL = `${baseURL}${issuePartURL}`;
-                        const linkTitle = `${issueNumber}: ${issueSummary}`;
-
+                    if (linkURL && linkTitle) {
                         // Create the HTML hyperlink
-                        const htmlLink = `<a href="${issueURL}">${linkTitle}</a>`;
+                        const htmlLink = `<a href="${linkURL}">${linkTitle}</a>`;
 
                         // Create the Markdown version of the link
-                        const markdownLink = `[${linkTitle}](${issueURL})`;
+                        const markdownLink = `[${linkTitle}](${linkURL})`;
 
                         return { markdownLink, htmlLink };
                     }
@@ -46,8 +66,8 @@ chrome.action.onClicked.addListener((tab) => {
                     return null; // Return null if the issue number or summary element is not found
                 }//end - Need this comment to help regex extraction in tests
 
-                const url = window.location.href;
-                const links = getLinks(url);
+                const pageURL = window.location.href;
+                const links = getLinks(pageURL);
 
                 if (links) {
                     const { markdownLink, htmlLink } = links;
