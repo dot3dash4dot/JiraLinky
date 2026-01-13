@@ -45,11 +45,11 @@ chrome.action.onClicked.addListener((tab) => {
                         linkURL = pageURL;
 
                         const elementSelectors = [
-                            '#sys_readonly\.cmdb_ci_business_app\.u_hpsm_name', //BA
-                            '#sys_readonly\.cmdb_ci_appl\.name', //Component
-                            '#sys_readonly\.change_request\.number', //Change Request
-                            '#sys_readonly\.u_unified_exceptions\.number', //Exception
-                            '#sys_readonly\.incident\.number' //Incident
+                            '#sys_readonly.cmdb_ci_business_app.u_hpsm_name', //BA
+                            '#sys_readonly.cmdb_ci_appl.name', //Component
+                            '#sys_readonly.change_request.number', //Change Request
+                            '#sys_readonly.u_unified_exceptions.number', //Exception
+                            '#sys_readonly.incident.number' //Incident
                         ];
 
                         //Find first matching element
