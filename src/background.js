@@ -1,5 +1,5 @@
 chrome.action.onClicked.addListener((tab) => {
-    chrome.scripting.executeScript(
+    chrome.scripting.executeScript( //Dynamically inject script into the page's context to bypass Jira's Content Security Policy restrictions
         {
             target: { tabId: tab.id },
             func: () => {
@@ -44,6 +44,33 @@ chrome.action.onClicked.addListener((tab) => {
                     else if (pageURL.includes("servicenow")) {
                         linkURL = pageURL;
 
+                        const macroponentElements = Array.from(document.querySelectorAll('body > *'))
+                            .filter(el => el.tagName.toLowerCase().startsWith('macroponent')
+                        );
+                        const macroponentElement = macroponentElements[0];
+                        if (!macroponentElement) {
+                            console.error('Failed to find ServiceNow macroponent element');
+                            return null;
+                        }
+
+                        const shadowRoot = macroponentElement.shadowRoot;
+                        if (!shadowRoot) {
+                            console.error('Failed to find ServiceNow shadow root element');
+                            return null;
+                        }
+                        
+                        const iframe = shadowRoot.querySelector('#gsft_main');
+                        if (!iframe) {
+                            console.error('Failed to find ServiceNow iframe element');
+                            return null;
+                        }
+
+                        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                        if (!iframeDocument) {
+                            console.error('Failed to access ServiceNow iframe document');
+                            return null;
+                        }
+
                         const elementSelectors = [
                             '#sys_readonly\\.cmdb_ci_business_app\\.u_hpsm_name', //BA
                             '#sys_readonly\\.cmdb_ci_appl\\.name', //Component
@@ -55,25 +82,22 @@ chrome.action.onClicked.addListener((tab) => {
                         //Find first matching element
                         let entityDescriptionElement;
                         for (const selector of elementSelectors) {
-                            entityDescriptionElement = document.querySelector(selector);
+                            entityDescriptionElement = iframeDocument.querySelector(selector);
                             if (entityDescriptionElement) {
                                 break;
                             }
                         }
-                        
-                        if (entityDescriptionElement) {
-                            const entityDescription = entityDescriptionElement.getAttribute('value');
-
-                            if (entityDescription) {
-                                linkTitle = entityDescription.trim();
-                            }
-                            else {
-                                console.error('Failed to parse ServiceNow entity details from page elements');
-                            }
-                        }
-                        else {
+                        if (!entityDescriptionElement) {
                             console.error('Failed to find ServiceNow page element');
                         }
+
+                        const entityDescription = entityDescriptionElement.getAttribute('value');
+                        if (!entityDescription) {
+                            console.error('Failed to parse ServiceNow entity details from page elements');
+                            return null;
+                        }
+
+                        linkTitle = entityDescription.trim();   
                     }
 
                     if (linkURL && linkTitle) {
