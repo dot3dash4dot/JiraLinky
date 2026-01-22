@@ -10,7 +10,7 @@ function copyLinkToClipboard(tab) {
                         const originalBackground = element.style.backgroundColor;
                         const originalTransition = element.style.transition;
                         element.style.transition = 'background-color 0.5s ease';
-                        element.style.backgroundColor = 'yellow';
+                        element.style.backgroundColor = '#ff7f2a';
                         setTimeout(() => {
                             element.style.backgroundColor = originalBackground;
                             setTimeout(() => {
