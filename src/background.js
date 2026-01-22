@@ -62,41 +62,44 @@ function copyLinkToClipboard(tab) {
                     else if (pageURL.includes("servicenow")) {
                         linkURL = pageURL;
 
+                        let elementSelectors;
+
                         const macroponentElements = Array.from(document.querySelectorAll('body > *'))
                             .filter(el => el.tagName.toLowerCase().startsWith('macroponent')
                         );
                         const macroponentElement = macroponentElements[0];
-                        if (!macroponentElement) {
-                            console.error('Failed to find ServiceNow macroponent element');
-                            return null;
-                        }
+                        if (macroponentElement) {  
+                            const shadowRoot = macroponentElement.shadowRoot;
+                            if (!shadowRoot) {
+                                console.error('Failed to find ServiceNow shadow root element');
+                                return null;
+                            }
+                            
+                            const iframe = shadowRoot.querySelector('#gsft_main');
+                            if (!iframe) {
+                                console.error('Failed to find ServiceNow iframe element');
+                                return null;
+                            }
 
-                        const shadowRoot = macroponentElement.shadowRoot;
-                        if (!shadowRoot) {
-                            console.error('Failed to find ServiceNow shadow root element');
-                            return null;
-                        }
-                        
-                        const iframe = shadowRoot.querySelector('#gsft_main');
-                        if (!iframe) {
-                            console.error('Failed to find ServiceNow iframe element');
-                            return null;
-                        }
+                            const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                            if (!iframeDocument) {
+                                console.error('Failed to access ServiceNow iframe document');
+                                return null;
+                            }
 
-                        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                        if (!iframeDocument) {
-                            console.error('Failed to access ServiceNow iframe document');
-                            return null;
+                            elementSelectors = [
+                                '#sys_readonly\\.cmdb_ci_business_app\\.u_hpsm_name', //BA
+                                '#sys_readonly\\.cmdb_ci_appl\\.name', //Component
+                                '#sys_readonly\\.change_request\\.number', //Change Request
+                                '#sys_readonly\\.u_unified_exceptions\\.number', //Exception
+                                '#sys_readonly\\.incident\\.number' //Incident
+                            ];
                         }
-
-                        const elementSelectors = [
-                            '#sys_readonly\\.cmdb_ci_business_app\\.u_hpsm_name', //BA
-                            '#sys_readonly\\.cmdb_ci_appl\\.name', //Component
-                            '#sys_readonly\\.change_request\\.number', //Change Request
-                            '#sys_readonly\\.u_unified_exceptions\\.number', //Exception
-                            '#sys_readonly\\.incident\\.number', //Incident
-                            "#sys_readonly\\.sys_user_group\\.name" //Assignment Group
-                        ];
+                        else { // These ServiceNow pages don't use macroponents/iframes/etc.
+                            elementSelectors = [
+                                "#sys_readonly\\.sys_user_group\\.name" //Assignment Group
+                            ];
+                        }
 
                         //Find first matching element
                         let entityDescriptionElement;
