@@ -204,6 +204,7 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Create the context menu item
+chrome.contextMenus.remove("copy-rizzlink", () => {});
 chrome.contextMenus.create({
     title: "Copy RizzLink",
     contexts: ["page"],
