@@ -61,7 +61,7 @@ function copyLinkToClipboard(tab) {
                     else if (pageURL.includes("servicenow")) {
                         linkURL = pageURL;
 
-                        let elementSelectors;
+                        let documentToQuery, elementSelectors;
 
                         const macroponentElements = Array.from(document.querySelectorAll('body > *'))
                             .filter(el => el.tagName.toLowerCase().startsWith('macroponent')
@@ -86,6 +86,8 @@ function copyLinkToClipboard(tab) {
                                 return null;
                             }
 
+                            documentToQuery = iframeDocument;
+
                             elementSelectors = [
                                 '#sys_readonly\\.cmdb_ci_business_app\\.u_hpsm_name', //BA
                                 '#sys_readonly\\.cmdb_ci_appl\\.name', //Component
@@ -95,6 +97,8 @@ function copyLinkToClipboard(tab) {
                             ];
                         }
                         else { // These ServiceNow pages don't use macroponents/iframes/etc.
+                            documentToQuery = document;
+
                             elementSelectors = [
                                 "#sys_readonly\\.sys_user_group\\.name" //Assignment Group
                             ];
@@ -103,7 +107,7 @@ function copyLinkToClipboard(tab) {
                         //Find first matching element
                         let entityDescriptionElement;
                         for (const selector of elementSelectors) {
-                            entityDescriptionElement = iframeDocument.querySelector(selector);
+                            entityDescriptionElement = documentToQuery.querySelector(selector);
                             if (entityDescriptionElement) {
                                 break;
                             }
